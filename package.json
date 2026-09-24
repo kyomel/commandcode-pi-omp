@@ -1,0 +1,55 @@
+{
+  "name": "@kyomel/pi-omp-cc",
+  "version": "0.1.0",
+  "description": "Command Code (commandcode.ai) provider for pi and Oh My Pi, built for the GOAT subscription via the documented Provider API",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "commandcode",
+    "provider",
+    "oh-my-pi",
+    "omp"
+  ],
+  "files": [
+    "index.ts",
+    "src/",
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && tsx tests/test-models.ts && tsx tests/test-auth.ts && tsx tests/test-runtime.ts",
+    "test:models": "tsx tests/test-models.ts",
+    "test:auth": "tsx tests/test-auth.ts",
+    "test:runtime": "tsx tests/test-runtime.ts",
+    "sync:catalog": "node scripts/sync-catalog.mjs",
+    "refresh:models": "node scripts/refresh-models.mjs"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": {
+      "optional": true
+    },
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.87.1",
+    "@earendil-works/pi-coding-agent": "^0.87.1",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
