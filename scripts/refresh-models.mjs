@@ -9,10 +9,9 @@
  * (e.g. GOAT). The extension re-decorates these raw entries from its bundled
  * catalog meta on load, so this script needs no metadata of its own.
  *
- * Intended wiring: run after `pi update --all` / `omp update` (for example as a
- * step in update-all-agents) so the next session starts with the current GOAT
- * catalog. The extension also self-refreshes on every session start; this
- * script exists so agent update flows refresh the list too.
+ * Intended wiring: run manually when you need to refresh the catalog without
+ * starting a session. The extension also self-refreshes on every session
+ * start, so this script is only a manual trigger.
  *
  * Usage:
  *   node scripts/refresh-models.mjs                 # all detected agent dirs

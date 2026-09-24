@@ -88,7 +88,7 @@ effort list; the upstream model decides its own depth.
 - Session start: the cached catalog registers immediately, then a background refresh updates it. Startup never blocks on the network.
 - Host refresh: `refreshModels` is implemented, so pi/OMP model-list refreshes refetch the catalog with the effective credential.
 - Manual: `/commandcode-refresh` inside a session. `/commandcode-status` shows redacted diagnostics.
-- Update flow: `node scripts/refresh-models.mjs` refreshes the cache for every detected agent dir (`~/.pi/agent`, `~/.omp/agent`). It is wired into `update-all-agents` after the pi and Oh My Pi update steps.
+- Manual trigger: `node scripts/refresh-models.mjs` refreshes the cache for every detected agent dir (`~/.pi/agent`, `~/.omp/agent`) without starting a session. It is deliberately not part of `update-all-agents`: the extension already self-refreshes on session start, so an update-loop step would duplicate work and add a network fetch to the update flow.
 
 Cache file: `<agent-dir>/commandcode-models.json`, mode `0600`, atomic writes. A failed refresh keeps the last good catalog.
 
