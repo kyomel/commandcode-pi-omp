@@ -373,6 +373,12 @@ async function writeCommandCodeModelsCache(
 
 export interface LoadCommandCodeModelsOptions extends FetchCommandCodeModelsOptions {
   cachePath: string
+  /**
+   * Cache paths of the other coding agents that have this plugin installed.
+   * After a successful live fetch the same catalog is mirrored there, so one
+   * host refreshing updates the model list of every host that runs the plugin.
+   */
+  mirrorPaths?: readonly string[]
 }
 
 export interface LoadCommandCodeModelsResult {
@@ -387,16 +393,23 @@ export async function loadCommandCodeModels(
   const cachePath = options.cachePath
   try {
     const models = await fetchCommandCodeModels(options)
+    const warnings: string[] = []
     try {
       await writeCommandCodeModelsCache(cachePath, models)
-      return { models, source: "live" }
     } catch (error) {
-      return {
-        models,
-        source: "live",
-        warning: `Loaded the live Command Code model catalog but could not update ${cachePath}: ${errorMessage(error)}`,
+      warnings.push(
+        `Loaded the live Command Code model catalog but could not update ${cachePath}: ${errorMessage(error)}`,
+      )
+    }
+    for (const mirrorPath of options.mirrorPaths ?? []) {
+      try {
+        await writeCommandCodeModelsCache(mirrorPath, models)
+      } catch (error) {
+        warnings.push(`Could not mirror the model catalog to ${mirrorPath}: ${errorMessage(error)}`)
       }
     }
+    if (warnings.length === 0) return { models, source: "live" }
+    return { models, source: "live", warning: warnings.join(" ") }
   } catch (liveError) {
     if (options.signal?.aborted) throw abortError(options.signal.reason ?? liveError)
     try {

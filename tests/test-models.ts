@@ -186,6 +186,33 @@ try {
   const fetched = await fetchCommandCodeModels({ fetchImpl: fetchOk as typeof fetch })
   assertEqual(fetched.length, 3, "fetchCommandCodeModels parses live catalog")
 
+  // Mirror: one host's refresh updates the cache of every agent with the plugin.
+  const mirrorCache = join(dir, "mirror", "commandcode-models.json")
+  const mirrored = await loadCommandCodeModels({
+    cachePath,
+    fetchImpl: fetchOk as typeof fetch,
+    mirrorPaths: [mirrorCache],
+  })
+  assertEqual(mirrored.source, "live", "mirrored load stays live")
+  assertEqual(mirrored.warning, undefined, "successful mirror adds no warning")
+  const mirroredOnDisk = JSON.parse(readFileSync(mirrorCache, "utf-8"))
+  assertEqual(mirroredOnDisk.models.length, 3, "mirror file receives the full catalog")
+  assertEqual(mirroredOnDisk.version, 2, "mirror file uses the current cache version")
+
+  // A broken mirror path must not fail the refresh; it only warns.
+  const blocker = join(dir, "blocker-file")
+  writeFileSync(blocker, "not a directory")
+  const brokenMirror = await loadCommandCodeModels({
+    cachePath,
+    fetchImpl: fetchOk as typeof fetch,
+    mirrorPaths: [join(blocker, "commandcode-models.json")],
+  })
+  assertEqual(brokenMirror.source, "live", "broken mirror keeps the live result")
+  assert(
+    brokenMirror.warning?.includes("Could not mirror"),
+    "broken mirror reports a mirror warning",
+  )
+
   // GOAT scoping: an apiKey option authenticates the catalog request.
   let seenAuth: string | undefined
   const fetchSpy = async (_url: unknown, init?: RequestInit) => {

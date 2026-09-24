@@ -85,7 +85,8 @@ effort list; the upstream model decides its own depth.
 
 ### Refresh behavior
 
-- Session start: the cached catalog registers immediately, then a background refresh updates it. Startup never blocks on the network.
+- Session start: the cached catalog registers immediately, then a background refresh updates it. Startup never blocks on the network. So after a plugin update, the next session in either host fetches the latest catalog.
+- Both hosts: a successful refresh also mirrors the catalog into the other agent's cache when this plugin is installed there. One session therefore updates the model list of every host running the plugin (pi `<->` Oh My Pi).
 - Host refresh: `refreshModels` is implemented, so pi/OMP model-list refreshes refetch the catalog with the effective credential.
 - Manual: `/commandcode-refresh` inside a session. `/commandcode-status` shows redacted diagnostics.
 - Manual trigger: `node scripts/refresh-models.mjs` refreshes the cache for every detected agent dir (`~/.pi/agent`, `~/.omp/agent`) without starting a session. It is deliberately not part of `update-all-agents`: the extension already self-refreshes on session start, so an update-loop step would duplicate work and add a network fetch to the update flow.

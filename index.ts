@@ -21,6 +21,8 @@ import {
   type ProviderConfig,
   type ProviderModelConfig,
 } from "@earendil-works/pi-coding-agent"
+import { existsSync, readFileSync } from "node:fs"
+import { homedir } from "node:os"
 import { join } from "node:path"
 
 import {
@@ -77,6 +79,60 @@ function commandCodeHeaders(): Record<string, string> | undefined {
   return undefined
 }
 
+const PACKAGE_NAME = "@kyomel/pi-omp-cc"
+const PACKAGE_DIR_NAME = "pi-omp-cc"
+
+/** pi records installed extensions in `<agent-dir>/settings.json` `packages`. */
+function piHasPlugin(home: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(
+      readFileSync(join(home, ".pi", "agent", "settings.json"), "utf-8"),
+    )
+    if (typeof parsed !== "object" || parsed === null) return false
+    const packages = (parsed as { packages?: unknown }).packages
+    if (!Array.isArray(packages)) return false
+    return packages.some((entry) => {
+      if (typeof entry === "string") {
+        return entry.includes(PACKAGE_NAME) || entry.includes(PACKAGE_DIR_NAME)
+      }
+      if (typeof entry === "object" && entry !== null) {
+        const source = (entry as { source?: unknown }).source
+        return (
+          typeof source === "string" &&
+          (source.includes(PACKAGE_NAME) || source.includes(PACKAGE_DIR_NAME))
+        )
+      }
+      return false
+    })
+  } catch {
+    return false
+  }
+}
+
+/** OMP links or installs plugins under `~/.omp/plugins/node_modules`. */
+function ompHasPlugin(home: string): boolean {
+  return existsSync(join(home, ".omp", "plugins", "node_modules", "@kyomel", PACKAGE_DIR_NAME))
+}
+
+/**
+ * Cache paths of the other coding agents that run this plugin. A successful
+ * refresh mirrors the catalog there, so updating models in one agent updates
+ * the model list of every agent the plugin is installed in.
+ */
+function mirrorCachePaths(currentAgentDir: string): string[] {
+  const home = homedir()
+  const paths: string[] = []
+  const piDir = join(home, ".pi", "agent")
+  const ompDir = join(home, ".omp", "agent")
+  if (currentAgentDir !== piDir && piHasPlugin(home)) {
+    paths.push(join(piDir, "commandcode-models.json"))
+  }
+  if (currentAgentDir !== ompDir && ompHasPlugin(home)) {
+    paths.push(join(ompDir, "commandcode-models.json"))
+  }
+  return paths
+}
+
 /**
  * Oh My Pi reads its own `thinking` capability surface on a model
  * (`ProviderModelConfig.thinking`); it does not read pi's `thinkingLevelMap`.
@@ -120,6 +176,7 @@ function toProviderModels(
 interface RefreshContext {
   modelsUrl: string
   cachePath: string
+  mirrorPaths: readonly string[]
   timeoutMs: number
 }
 
@@ -152,6 +209,7 @@ function createProviderConfig(
       const loaded = await loadCommandCodeModels({
         url: refresh.modelsUrl,
         cachePath: refresh.cachePath,
+        mirrorPaths: refresh.mirrorPaths,
         timeoutMs: refresh.timeoutMs,
         apiKey: key,
         signal: context.signal,
@@ -180,6 +238,7 @@ export default async function (pi: ExtensionAPI) {
   const modelsCachePath =
     process.env.COMMANDCODE_MODELS_CACHE ?? join(getAgentDir(), "commandcode-models.json")
   const ompHost = !isPiHost()
+  const mirrorPaths = mirrorCachePaths(getAgentDir())
 
   const runtime = createCommandCodeRuntime<ProviderConfig, ExtensionCommandContext>(pi, {
     endpoint: modelsUrl,
@@ -188,6 +247,7 @@ export default async function (pi: ExtensionAPI) {
       loadCommandCodeModels({
         url: modelsUrl,
         cachePath: modelsCachePath,
+        mirrorPaths,
         timeoutMs: modelsTimeoutMs,
         apiKey: getConfiguredApiKey(),
         signal,
@@ -197,7 +257,7 @@ export default async function (pi: ExtensionAPI) {
       createProviderConfig(
         models,
         apiBase,
-        { modelsUrl, cachePath: modelsCachePath, timeoutMs: modelsTimeoutMs },
+        { modelsUrl, cachePath: modelsCachePath, mirrorPaths, timeoutMs: modelsTimeoutMs },
         ompHost,
       ),
   })
