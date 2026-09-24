@@ -2,7 +2,7 @@
 // Regenerate with: npm run sync:catalog
 // Source: npm package command-code@1.65.0 (dist/cli.mjs model registry
 // + dist/bundled/command-code-knowledge/reference/models.md).
-// Generated: 2026-09-24T10:18:51.887Z
+// Generated: 2026-09-24T14:41:23.538Z
 
 export interface CatalogMeta {
   input: readonly ("text" | "image")[]
@@ -731,5 +731,45 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     contextWindow: 500000,
     minPlan: "GOAT and above",
     cost: { input: 1.2, output: 3.6, cacheRead: 0.3, cacheWrite: 0 },
+  },
+  "poolside/laguna-s-2.1-free": {
+    input: ["text"],
+    reasoning: false,
+    adaptive: false,
+    efforts: [],
+    minPlan: "Go and above",
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+  "inclusionai/ling-3.0-flash-sante:free": {
+    input: ["text"],
+    reasoning: false,
+    adaptive: false,
+    efforts: [],
+    minPlan: "Go and above",
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+  "stealth/space-bunny-alpha": {
+    input: ["text"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high"],
+    minPlan: "Go and above",
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+  "meta/muse-spark-1.2": {
+    input: ["text"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high","xhigh"],
+    minPlan: "GOAT and above",
+    cost: { input: 1.25, output: 4.25, cacheRead: 0.15, cacheWrite: 0 },
+  },
+  "meta/muse-spark-1.2-contributor": {
+    input: ["text"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high","xhigh"],
+    minPlan: "Go and above",
+    cost: { input: 0.1, output: 0.2, cacheRead: 0.002, cacheWrite: 0 },
   },
 }

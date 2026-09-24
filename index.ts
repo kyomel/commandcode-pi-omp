@@ -77,10 +77,24 @@ function commandCodeHeaders(): Record<string, string> | undefined {
   return undefined
 }
 
+/**
+ * Oh My Pi reads its own `thinking` capability surface on a model
+ * (`ProviderModelConfig.thinking`); it does not read pi's `thinkingLevelMap`.
+ * The effort tokens are the same, so the Command Code catalog efforts are
+ * forwarded verbatim on that host.
+ */
+interface OmpThinkingConfig {
+  mode: "effort"
+  efforts: readonly string[]
+}
+
+type HostProviderModelConfig = ProviderModelConfig & { thinking?: OmpThinkingConfig }
+
 function toProviderModels(
   models: readonly CommandCodeModel[],
   apiBase: string,
-): ProviderModelConfig[] {
+  ompHost: boolean,
+): HostProviderModelConfig[] {
   const headers = commandCodeHeaders()
   return models.map((model) => ({
     id: model.id,
@@ -88,7 +102,13 @@ function toProviderModels(
     api: model.api,
     baseUrl: baseUrlForModel(apiBase, model.api),
     reasoning: model.reasoning,
-    ...(model.reasoning ? { thinkingLevelMap: thinkingLevelMapForEfforts(model.efforts) } : {}),
+    ...(ompHost
+      ? model.reasoning && model.efforts.length > 0
+        ? { thinking: { mode: "effort", efforts: [...model.efforts] } }
+        : {}
+      : model.reasoning
+        ? { thinkingLevelMap: thinkingLevelMapForEfforts(model.efforts) }
+        : {}),
     input: [...model.input],
     cost: model.cost,
     contextWindow: model.contextWindow,
@@ -107,6 +127,7 @@ function createProviderConfig(
   models: readonly CommandCodeModel[],
   apiBase: string,
   refresh: RefreshContext,
+  ompHost: boolean,
 ): ProviderConfig {
   const apiKey = providerApiKey()
   const headers = commandCodeHeaders()
@@ -124,9 +145,9 @@ function createProviderConfig(
       refreshToken,
       getApiKey,
     },
-    models: toProviderModels(models, apiBase),
+    models: toProviderModels(models, apiBase, ompHost),
     refreshModels: async (context) => {
-      if (!context.allowNetwork) return toProviderModels(models, apiBase)
+      if (!context.allowNetwork) return toProviderModels(models, apiBase, ompHost)
       const key = apiKeyFromCredential(context.credential) ?? getConfiguredApiKey()
       const loaded = await loadCommandCodeModels({
         url: refresh.modelsUrl,
@@ -136,7 +157,7 @@ function createProviderConfig(
         signal: context.signal,
       })
       const next = loaded.models.length > 0 ? loaded.models : models
-      return toProviderModels(next, apiBase)
+      return toProviderModels(next, apiBase, ompHost)
     },
   }
 }
@@ -158,6 +179,7 @@ export default async function (pi: ExtensionAPI) {
   const modelsTimeoutMs = getModelsTimeoutMs()
   const modelsCachePath =
     process.env.COMMANDCODE_MODELS_CACHE ?? join(getAgentDir(), "commandcode-models.json")
+  const ompHost = !isPiHost()
 
   const runtime = createCommandCodeRuntime<ProviderConfig, ExtensionCommandContext>(pi, {
     endpoint: modelsUrl,
@@ -172,11 +194,12 @@ export default async function (pi: ExtensionAPI) {
       }),
     loadCachedModels: () => loadCachedCommandCodeModels(modelsCachePath),
     createProviderConfig: (models) =>
-      createProviderConfig(models, apiBase, {
-        modelsUrl,
-        cachePath: modelsCachePath,
-        timeoutMs: modelsTimeoutMs,
-      }),
+      createProviderConfig(
+        models,
+        apiBase,
+        { modelsUrl, cachePath: modelsCachePath, timeoutMs: modelsTimeoutMs },
+        ompHost,
+      ),
   })
 
   pi.on("session_shutdown", () => {

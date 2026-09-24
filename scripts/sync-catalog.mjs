@@ -4,9 +4,10 @@
  *
  * The official CLI bundles a model registry (input modalities, reasoning,
  * reasoningEfforts, contextWindow) in dist/cli.mjs and a docs catalog
- * (min plan, rates) in dist/bundled/command-code-knowledge/reference/models.md.
- * This script snapshots both so the extension can decorate the live Provider
- * API catalog without shipping the whole CLI.
+ * (efforts, min plan, rates) in dist/bundled/command-code-knowledge/reference/models.md.
+ * This script snapshots both - plus docs-only models the registry omits - so
+ * the extension can decorate the live Provider API catalog without shipping
+ * the whole CLI.
  *
  * Usage:
  *   node scripts/sync-catalog.mjs            # latest published CLI
@@ -56,14 +57,41 @@ try {
   const docs = parseDocsCatalog(docsSource)
   for (const model of models) {
     const doc = docs.get(model.id)
-    if (doc) {
-      model.minPlan = doc.minPlan
-      model.cost = doc.cost
+    if (!doc) continue
+    model.minPlan = doc.minPlan
+    model.cost = doc.cost
+    // The docs "Efforts" column is the user-facing per-model thinking list and
+    // matches the CLI registry where both exist. It is the only source for
+    // models the registry does not ship.
+    if (doc.efforts.length > 0) {
+      model.efforts = doc.efforts
+      model.reasoning = true
+      model.adaptive = false
     }
   }
 
+  // The live Provider API serves models that the CLI registry does not list.
+  // Keep them in the meta so their documented thinking levels are available.
+  const known = new Set(models.map((m) => m.id))
+  let docsOnly = 0
+  for (const [id, doc] of docs) {
+    if (known.has(id)) continue
+    docsOnly += 1
+    models.push({
+      id,
+      input: ["text"],
+      reasoning: doc.efforts.length > 0,
+      adaptive: false,
+      efforts: doc.efforts,
+      minPlan: doc.minPlan,
+      cost: doc.cost,
+    })
+  }
+
   const matched = models.filter((m) => m.minPlan).length
-  console.log(`command-code@${cliVersion}: ${models.length} registry models, ${matched} with docs min plan/pricing`)
+  console.log(
+    `command-code@${cliVersion}: ${models.length} models (${docsOnly} docs-only), ${matched} with min plan/pricing`,
+  )
 
   writeFileSync(join(root, "src", "catalog-meta.ts"), renderCatalogMeta(models, cliVersion))
   console.log(`wrote src/catalog-meta.ts`)
@@ -113,13 +141,13 @@ function parseDocsCatalog(source) {
     const price = priceCell.match(/\$([0-9.]+)\s*\/\s*\$([0-9.]+)/)
     const cacheRead = priceCell.match(/cache\s*\$([0-9.]+)/)
     const cacheWrite = priceCell.match(/write\s*\$([0-9.]+)/)
-    const docsEfforts =
+    const efforts =
       effortsCell === "—" || !effortsCell
         ? []
         : effortsCell.split(",").map((e) => e.trim()).filter(Boolean)
     rows.set(id, {
       minPlan,
-      docsEfforts,
+      efforts,
       cost: {
         input: price ? Number(price[1]) : 0,
         output: price ? Number(price[2]) : 0,

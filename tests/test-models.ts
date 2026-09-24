@@ -96,6 +96,32 @@ assertEqual(effortMap.max, "max", "supported effort maps through")
 assertEqual(effortMap.medium, null, "unsupported effort maps to null")
 assertEqual(effortMap.xhigh, null, "unsupported effort maps to null")
 
+// Docs-only models (in the Provider API, absent from the CLI registry) still
+// carry their documented thinking levels and GOAT plan gating.
+const docsOnly = commandCodeModelsFromApiResponse({
+  object: "list",
+  data: [
+    {
+      id: "meta/muse-spark-1.2",
+      name: "Muse Spark 1.2",
+      object: "model",
+      owned_by: "command-code",
+      context_length: 1050000,
+      created: 1790244429,
+      supported_endpoints: ["/chat/completions"],
+    },
+  ],
+})
+const muse = docsOnly[0]!
+assertEqual(muse.reasoning, true, "docs-only model is reasoning-capable")
+assertDeepEqual(
+  [...muse.efforts],
+  ["low", "medium", "high", "xhigh"],
+  "docs-only model keeps documented efforts",
+)
+assertEqual(muse.minPlan, "GOAT and above", "docs-only model keeps its GOAT plan gate")
+assert(muse.name.includes("(CC)"), "GOAT models need no plan suffix")
+
 // Cache roundtrip: serialize -> parse
 const serialized = serializeCommandCodeModelsCache(models)
 const roundtripped = commandCodeModelsFromCache(JSON.parse(serialized))

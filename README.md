@@ -60,6 +60,29 @@ Command Code still gates individual models by plan at request time (`MODEL_NOT_I
 
 A GOAT key runs GOAT-gated models and gets a clear `MODEL_NOT_IN_PLAN` error for Pro/Max models.
 
+## Thinking levels
+
+Command Code's Provider API does not expose per-model thinking metadata. The
+`/provider/v1/models` response has no reasoning fields, and `reasoning_effort`
+is validated against one global enum: `low|medium|high|xhigh|max` (`minimal` is
+rejected with a 400). Per-model effort lists live in Command Code's own catalog:
+
+- the CLI registry (`reasoningEfforts`) in the `command-code` npm package
+- the "Efforts" column of the bundled models reference
+
+`scripts/sync-catalog.mjs` merges both (they agree), keeps models that only the
+docs list, and writes `src/catalog-meta.ts`. The extension then maps the result
+onto each host:
+
+- pi: `thinkingLevelMap` per model, so the picker offers exactly the documented
+  levels and clamps unsupported picks.
+- Oh My Pi: the native `thinking: { mode: "effort", efforts }` field on each
+  registered model. This overrides OMP's own bundled commandcode catalog, so
+  both hosts agree and OMP picks up new levels as soon as the catalog refreshes.
+
+Adaptive models (reasoning on, no explicit levels, e.g. Kimi K2.7 Code) keep no
+effort list; the upstream model decides its own depth.
+
 ### Refresh behavior
 
 - Session start: the cached catalog registers immediately, then a background refresh updates it. Startup never blocks on the network.

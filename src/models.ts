@@ -35,6 +35,15 @@ const ZERO_COST = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } as const
 const PI_THINKING_LEVELS = ["minimal", "low", "medium", "high", "xhigh", "max"] as const
 export type PiThinkingLevel = (typeof PI_THINKING_LEVELS)[number]
 
+/**
+ * Reasoning efforts the live Provider API accepts on OpenAI-shape models.
+ * Verified: `reasoning_effort` rejects anything outside this set with a 400
+ * ("expected one of low|medium|high|xhigh|max"); `minimal` is not accepted.
+ * Anthropic-shape models use their own effort semantics, so they are exempt.
+ */
+export const API_REASONING_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
+const API_EFFORT_SET: ReadonlySet<string> = new Set(API_REASONING_EFFORTS)
+
 export function thinkingLevelMapForEfforts(
   efforts: readonly string[],
 ): Partial<Record<PiThinkingLevel, string | null>> {
@@ -83,7 +92,11 @@ function decorateModel(
 ): CommandCodeModel {
   const meta: CatalogMeta | undefined = CATALOG_META[id]
   const reasoning = meta?.reasoning ?? false
-  const efforts = meta && !meta.adaptive ? meta.efforts : []
+  const documented = meta && !meta.adaptive ? meta.efforts : []
+  const efforts =
+    api === "anthropic-messages"
+      ? documented
+      : documented.filter((effort) => API_EFFORT_SET.has(effort))
   const contextWindow = meta?.contextWindow ?? contextLength
   const maxTokens = Math.min(contextWindow, meta?.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS)
   return {
