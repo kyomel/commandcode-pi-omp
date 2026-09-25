@@ -1,6 +1,9 @@
 /**
  * Command Code provider for pi and Oh My Pi, built for GOAT subscriptions.
  *
+ * Unofficial community package. Not affiliated with, endorsed by, or supported
+ * by Command Code. Uses the documented Provider API with the user's own key.
+ *
  * Uses Command Code's documented Provider API:
  *   https://api.commandcode.ai/provider/v1
  *

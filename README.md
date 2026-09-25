@@ -1,5 +1,11 @@
 # pi-omp-cc
 
+> **Unofficial.** This is a community package. It is not affiliated with, endorsed
+> by, or supported by Command Code (commandcode.ai), by pi, or by Oh My Pi. Use it
+> with your own Command Code API key. Get your plan and key only from
+> [commandcode.ai](https://commandcode.ai). Command Code does not authorize
+> resellers, and this package sells nothing.
+
 Command Code provider for [pi](https://github.com/earendil-works/pi-coding-agent) and Oh My Pi, built for the GOAT subscription plan.
 
 One TypeScript extension package works in both hosts. It uses Command Code's documented Provider API, so requests stream through the host's native OpenAI/Anthropic implementations. No custom wire protocol.
@@ -115,3 +121,24 @@ node scripts/sync-catalog.mjs   # regenerate src/catalog-meta.ts from the comman
 ```
 
 `src/catalog-meta.ts` is generated. Do not edit it by hand. Run `sync-catalog.mjs` when the official CLI registry changes.
+
+## Release
+
+```sh
+npm login
+npm publish        # prepublishOnly runs the test suite first
+```
+
+Then point both hosts at the published package instead of the checkout:
+
+```sh
+pi remove ./pi-omp-cc        # or the installed path
+pi install npm:@kyomel/pi-omp-cc
+
+omp plugin uninstall @kyomel/pi-omp-cc
+omp plugin install @kyomel/pi-omp-cc
+```
+
+The `pi-package` keyword makes the published package eligible for the
+[Pi package gallery](https://pi.dev/packages). The gallery reads the `repository`
+field for its repo link.

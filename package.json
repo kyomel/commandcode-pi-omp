@@ -1,9 +1,24 @@
 {
   "name": "@kyomel/pi-omp-cc",
   "version": "0.1.0",
-  "description": "Command Code (commandcode.ai) provider for pi and Oh My Pi, built for the GOAT subscription via the documented Provider API",
+  "description": "Unofficial Command Code (commandcode.ai) provider for pi and Oh My Pi. Talks to the documented Provider API with your own API key. Not affiliated with or endorsed by Command Code.",
   "type": "module",
   "license": "MIT",
+  "author": "kyomel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyomel/commandcode-pi-omp.git"
+  },
+  "homepage": "https://github.com/kyomel/commandcode-pi-omp#readme",
+  "bugs": {
+    "url": "https://github.com/kyomel/commandcode-pi-omp/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "pi-package",
     "pi-extension",
@@ -26,7 +41,8 @@
     "test:auth": "tsx tests/test-auth.ts",
     "test:runtime": "tsx tests/test-runtime.ts",
     "sync:catalog": "node scripts/sync-catalog.mjs",
-    "refresh:models": "node scripts/refresh-models.mjs"
+    "refresh:models": "node scripts/refresh-models.mjs",
+    "prepublishOnly": "npm test"
   },
   "pi": {
     "extensions": [
