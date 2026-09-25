@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -68,6 +68,54 @@ try {
   )
 } finally {
   rmSync(dir, { recursive: true, force: true })
+}
+
+// host-aware ordering: the running host's own auth file outranks the other host's
+const hostHome = mkdtempSync(join(tmpdir(), "pi-omp-cc-home-"))
+try {
+  const home = join(hostHome, "home")
+  const cliDir = join(home, ".commandcode")
+  const piDir = join(home, ".pi", "agent")
+  const ompDir = join(home, ".omp", "agent")
+  mkdirSync(piDir, { recursive: true })
+  mkdirSync(ompDir, { recursive: true })
+  writeFileSync(join(piDir, "auth.json"), JSON.stringify({ commandcode: { type: "oauth", access: "user_pi" } }))
+  writeFileSync(join(ompDir, "auth.json"), JSON.stringify({ commandcode: { type: "oauth", access: "user_omp" } }))
+  assertEqual(
+    getConfiguredApiKey({ env: {}, homeDir: () => home, agentDir: piDir }),
+    "user_pi",
+    "pi host resolves its own auth file first",
+  )
+  assertEqual(
+    getConfiguredApiKey({ env: {}, homeDir: () => home, agentDir: ompDir }),
+    "user_omp",
+    "omp host resolves its own auth file first",
+  )
+  assertEqual(
+    getConfiguredApiKey({ env: {}, homeDir: () => home }),
+    "user_pi",
+    "without agentDir the pi order applies",
+  )
+  assertEqual(
+    getConfiguredApiKey({ env: { COMMAND_CODE_API_KEY: "user_env3" }, homeDir: () => home, agentDir: ompDir }),
+    "user_env3",
+    "env still wins over host files",
+  )
+  rmSync(join(ompDir, "auth.json"))
+  assertEqual(
+    getConfiguredApiKey({ env: {}, homeDir: () => home, agentDir: ompDir }),
+    "user_pi",
+    "host without its own key falls back to the other host's file",
+  )
+  mkdirSync(cliDir, { recursive: true })
+  writeFileSync(join(cliDir, "auth.json"), JSON.stringify({ apiKey: "user_cli" }))
+  assertEqual(
+    getConfiguredApiKey({ env: {}, homeDir: () => home, agentDir: ompDir }),
+    "user_cli",
+    "cmd CLI auth file outranks both host files",
+  )
+} finally {
+  rmSync(hostHome, { recursive: true, force: true })
 }
 
 // validateApiKey via injected fetch

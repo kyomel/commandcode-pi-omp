@@ -54,7 +54,7 @@ Three ways to provide a key:
 
 1. `/login` inside pi or Oh My Pi. Press Enter for browser login (Command Code Studio posts the key to a local callback), type `key` to paste, or paste the key directly. The key is validated against `GET /alpha/whoami` before it is stored.
 2. Environment: `COMMAND_CODE_API_KEY` or `COMMANDCODE_API_KEY`.
-3. Auth file: `~/.commandcode/auth.json` (`{"apiKey": "..."}` or `{"commandcode": {"access": "..."}}`). The host auth files `~/.pi/agent/auth.json` and `~/.omp/agent/auth.json` are read as a fallback.
+3. Auth file: `~/.commandcode/auth.json` (`{"apiKey": "..."}` or `{"commandcode": {"access": "..."}}`), then the running host's own `~/.pi/agent/auth.json` / `~/.omp/agent/auth.json`, then the other host's. Each host prefers its own file, so pi and Oh My Pi can hold different keys.
 
 Keys do not expire. They are stored as OAuth credentials with a far-future expiry so both hosts treat them as subscription credentials.
 

@@ -213,12 +213,18 @@ export function apiKeyFromCredential(value: unknown): string | undefined {
   return stringValue(value.access) ?? stringValue(value.key)
 }
 
-function defaultAuthPaths(home: string): readonly string[] {
-  return [
-    join(home, ".commandcode", "auth.json"),
-    join(home, ".pi", "agent", "auth.json"),
-    join(home, ".omp", "agent", "auth.json"),
-  ]
+/**
+ * Auth files, most specific first. The running host's own file outranks the
+ * other host's file, so pi and OMP can hold different Command Code keys.
+ * `agentDir` is the current host's agent directory (pi `~/.pi/agent`,
+ * OMP `~/.omp/agent`); without it the pi order applies.
+ */
+function defaultAuthPaths(home: string, agentDir?: string): readonly string[] {
+  const commandCode = join(home, ".commandcode", "auth.json")
+  const pi = join(home, ".pi", "agent", "auth.json")
+  const omp = join(home, ".omp", "agent", "auth.json")
+  if (agentDir === join(home, ".omp", "agent")) return [commandCode, omp, pi]
+  return [commandCode, pi, omp]
 }
 
 /**
@@ -230,6 +236,7 @@ export function getConfiguredApiKey(
     env?: NodeJS.ProcessEnv
     authPaths?: readonly string[]
     homeDir?: () => string
+    agentDir?: string
   } = {},
 ): string | undefined {
   const env = options.env ?? process.env
@@ -237,7 +244,7 @@ export function getConfiguredApiKey(
   if (env.COMMANDCODE_API_KEY) return env.COMMANDCODE_API_KEY
 
   const home = options.homeDir?.() ?? homedir()
-  for (const authPath of options.authPaths ?? defaultAuthPaths(home)) {
+  for (const authPath of options.authPaths ?? defaultAuthPaths(home, options.agentDir)) {
     try {
       if (!existsSync(authPath)) continue
       const parsed: unknown = JSON.parse(readFileSync(authPath, "utf-8"))

@@ -69,8 +69,16 @@ function isPiHost(): boolean {
   return typeof register === "function"
 }
 
+/**
+ * Key resolution for the running host: env, then the `cmd` CLI auth file,
+ * then this host's own auth.json, then the other host's (see src/auth.ts).
+ */
+function hostConfiguredApiKey(): string | undefined {
+  return getConfiguredApiKey({ agentDir: getAgentDir() })
+}
+
 function providerApiKey(): string | undefined {
-  const configured = getConfiguredApiKey()
+  const configured = hostConfiguredApiKey()
   if (configured) return configured
   return isPiHost() ? "$COMMAND_CODE_API_KEY" : undefined
 }
@@ -208,7 +216,7 @@ function createProviderConfig(
     models: toProviderModels(models, apiBase, ompHost),
     refreshModels: async (context) => {
       if (!context.allowNetwork) return toProviderModels(models, apiBase, ompHost)
-      const key = apiKeyFromCredential(context.credential) ?? getConfiguredApiKey()
+      const key = apiKeyFromCredential(context.credential) ?? hostConfiguredApiKey()
       const loaded = await loadCommandCodeModels({
         url: refresh.modelsUrl,
         cachePath: refresh.cachePath,
@@ -252,7 +260,7 @@ export default async function (pi: ExtensionAPI) {
         cachePath: modelsCachePath,
         mirrorPaths,
         timeoutMs: modelsTimeoutMs,
-        apiKey: getConfiguredApiKey(),
+        apiKey: hostConfiguredApiKey(),
         signal,
       }),
     loadCachedModels: () => loadCachedCommandCodeModels(modelsCachePath),

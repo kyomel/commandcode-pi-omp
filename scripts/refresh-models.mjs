@@ -33,18 +33,21 @@ const CACHE_VERSION = 2
 /**
  * Resolve a Command Code API key the same way the extension does:
  * env first, then ~/.commandcode/auth.json and the hosts' auth.json files.
- * Returns undefined when nothing is configured; the catalog fetch then runs
- * anonymously and returns the public list.
+ * The target host's own auth file outranks the other host's, matching the
+ * extension's per-host resolution. Returns undefined when nothing is
+ * configured; the catalog fetch then runs anonymously and returns the
+ * public list.
  */
-function resolveApiKey() {
+function resolveApiKey(agentDir) {
   if (process.env.COMMAND_CODE_API_KEY) return process.env.COMMAND_CODE_API_KEY
   if (process.env.COMMANDCODE_API_KEY) return process.env.COMMANDCODE_API_KEY
   const home = homedir()
-  const authPaths = [
-    join(home, ".commandcode", "auth.json"),
-    join(home, ".pi", "agent", "auth.json"),
-    join(home, ".omp", "agent", "auth.json"),
-  ]
+  const commandcode = join(home, ".commandcode", "auth.json")
+  const pi = join(home, ".pi", "agent", "auth.json")
+  const omp = join(home, ".omp", "agent", "auth.json")
+  const authPaths = agentDir === join(home, ".omp", "agent")
+    ? [commandcode, omp, pi]
+    : [commandcode, pi, omp]
   for (const authPath of authPaths) {
     try {
       if (!existsSync(authPath)) continue
@@ -141,19 +144,24 @@ async function writeCache(dir, models) {
 
 const args = parseArgs(process.argv.slice(2))
 try {
-  const apiKey = resolveApiKey()
-  const models = await fetchModels(args.url, args.timeoutMs, apiKey)
-  console.log(
-    `fetched ${models.length} Command Code models from ${args.url} (${apiKey ? "authenticated" : "anonymous"})`,
-  )
   let failures = 0
+  const catalogs = new Map()
   for (const dir of args.dirs) {
     try {
-      const path = await writeCache(dir, models)
+      const apiKey = resolveApiKey(dir)
+      const cacheKey = apiKey ?? "anonymous"
+      if (!catalogs.has(cacheKey)) {
+        const models = await fetchModels(args.url, args.timeoutMs, apiKey)
+        catalogs.set(cacheKey, models)
+        console.log(
+          `fetched ${models.length} Command Code models from ${args.url} (${apiKey ? "authenticated" : "anonymous"})`,
+        )
+      }
+      const path = await writeCache(dir, catalogs.get(cacheKey))
       console.log(`wrote ${path}`)
     } catch (error) {
       failures += 1
-      console.error(`failed to write cache in ${dir}: ${error instanceof Error ? error.message : error}`)
+      console.error(`failed to refresh cache in ${dir}: ${error instanceof Error ? error.message : error}`)
     }
   }
   process.exit(failures === args.dirs.length ? 1 : 0)
