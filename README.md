@@ -56,6 +56,8 @@ Three ways to provide a key:
 2. Environment: `COMMAND_CODE_API_KEY` or `COMMANDCODE_API_KEY`.
 3. Auth file: `~/.commandcode/auth.json` (`{"apiKey": "..."}` or `{"commandcode": {"access": "..."}}`), then the running host's own `~/.pi/agent/auth.json` / `~/.omp/agent/auth.json`, then the other host's. Each host prefers its own file, so pi and Oh My Pi can hold different keys.
 
+Key precedence is per host. For pi, an environment key wins over the auth files. For Oh My Pi, the auth files win over an environment key. This keeps a stale `COMMANDCODE_API_KEY` from shadowing the stored key on OMP. On OMP the environment key is the fallback when no auth file has a key.
+
 Keys do not expire. They are stored as OAuth credentials with a far-future expiry so both hosts treat them as subscription credentials.
 
 ## Models and the GOAT plan
@@ -107,7 +109,7 @@ Cache file: `<agent-dir>/commandcode-models.json`, mode `0600`, atomic writes. A
 
 | Variable | Purpose |
 | --- | --- |
-| `COMMAND_CODE_API_KEY`, `COMMANDCODE_API_KEY` | API key (highest priority) |
+| `COMMAND_CODE_API_KEY`, `COMMANDCODE_API_KEY` | API key (pi: highest priority; OMP: fallback when no auth file has a key) |
 | `COMMANDCODE_API_BASE` | Override `https://api.commandcode.ai/provider/v1` |
 | `COMMANDCODE_MODELS_URL` | Override the models endpoint |
 | `COMMANDCODE_MODELS_CACHE` | Override the cache file path |

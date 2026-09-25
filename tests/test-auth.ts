@@ -98,8 +98,13 @@ try {
   )
   assertEqual(
     getConfiguredApiKey({ env: { COMMAND_CODE_API_KEY: "user_env3" }, homeDir: () => home, agentDir: ompDir }),
-    "user_env3",
-    "env still wins over host files",
+    "user_omp",
+    "omp's own auth store beats an ambient env key",
+  )
+  assertEqual(
+    getConfiguredApiKey({ env: { COMMANDCODE_API_KEY: "user_env4" }, homeDir: () => home, agentDir: ompDir, authPaths: [] }),
+    "user_env4",
+    "omp falls back to the env key when no auth file carries one",
   )
   rmSync(join(ompDir, "auth.json"))
   assertEqual(

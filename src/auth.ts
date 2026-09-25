@@ -227,9 +227,44 @@ function defaultAuthPaths(home: string, agentDir?: string): readonly string[] {
   return [commandCode, pi, omp]
 }
 
+/** Read one auth file and extract its Command Code key, if any. */
+function readAuthFileKey(authPath: string): string | undefined {
+  try {
+    if (!existsSync(authPath)) return undefined
+    const parsed: unknown = JSON.parse(readFileSync(authPath, "utf-8"))
+    if (!isRecord(parsed)) return undefined
+    const direct = stringValue(parsed.apiKey)
+    if (direct) return direct
+    for (const key of ["commandcode", "command-code"] as const) {
+      const value = parsed[key]
+      const credential = apiKeyFromCredential(value) ?? stringValue(value)
+      if (credential) return credential
+    }
+    return undefined
+  } catch {
+    // Ignore malformed or unreadable auth files.
+    return undefined
+  }
+}
+
+function firstAuthFileKey(authPaths: readonly string[]): string | undefined {
+  for (const authPath of authPaths) {
+    const key = readAuthFileKey(authPath)
+    if (key) return key
+  }
+  return undefined
+}
+
 /**
- * Resolve a Command Code API key without the host credential store:
- * env first, then the `cmd` CLI auth file and the hosts' auth.json files.
+ * Resolve a Command Code API key from the environment and the auth files.
+ *
+ * Precedence is host-specific. pi treats `COMMAND_CODE_API_KEY` as an env
+ * template, so an ambient env key wins there. Oh My Pi has no such template:
+ * a raw env key becomes a literal `apiKey` override that shadows its `/login`
+ * credential store (see index.ts). So for OMP the persistent per-host auth
+ * files win over an ambient env key. That keeps a stale `COMMANDCODE_API_KEY`
+ * (a leftover from an old `~/.env`) from bricking the stored per-host key. For
+ * OMP the env key is still the fallback when no auth file carries a key.
  */
 export function getConfiguredApiKey(
   options: {
@@ -240,25 +275,12 @@ export function getConfiguredApiKey(
   } = {},
 ): string | undefined {
   const env = options.env ?? process.env
-  if (env.COMMAND_CODE_API_KEY) return env.COMMAND_CODE_API_KEY
-  if (env.COMMANDCODE_API_KEY) return env.COMMANDCODE_API_KEY
-
+  const envKey = stringValue(env.COMMAND_CODE_API_KEY) ?? stringValue(env.COMMANDCODE_API_KEY)
   const home = options.homeDir?.() ?? homedir()
-  for (const authPath of options.authPaths ?? defaultAuthPaths(home, options.agentDir)) {
-    try {
-      if (!existsSync(authPath)) continue
-      const parsed: unknown = JSON.parse(readFileSync(authPath, "utf-8"))
-      if (!isRecord(parsed)) continue
-      const direct = stringValue(parsed.apiKey)
-      if (direct) return direct
-      for (const key of ["commandcode", "command-code"] as const) {
-        const value = parsed[key]
-        const credential = apiKeyFromCredential(value) ?? stringValue(value)
-        if (credential) return credential
-      }
-    } catch {
-      // Ignore malformed or unreadable auth files.
-    }
+  const authPaths = options.authPaths ?? defaultAuthPaths(home, options.agentDir)
+
+  if (options.agentDir === join(home, ".omp", "agent")) {
+    return firstAuthFileKey(authPaths) ?? envKey
   }
-  return undefined
+  return envKey ?? firstAuthFileKey(authPaths)
 }
