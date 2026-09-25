@@ -1,8 +1,8 @@
 // GENERATED FILE - do not edit by hand.
 // Regenerate with: npm run sync:catalog
-// Source: npm package command-code@1.65.0 (dist/cli.mjs model registry
+// Source: npm package command-code@1.65.2 (dist/cli.mjs model registry
 // + dist/bundled/command-code-knowledge/reference/models.md).
-// Generated: 2026-09-24T14:41:23.538Z
+// Generated: 2026-09-25T09:32:41.671Z
 
 export interface CatalogMeta {
   input: readonly ("text" | "image")[]
@@ -559,9 +559,9 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     reasoning: true,
     adaptive: true,
     efforts: [],
-    contextWindow: 1000000,
+    contextWindow: 262144,
     minPlan: "Go and above",
-    cost: { input: 0.1, output: 0.3, cacheRead: 0.02, cacheWrite: 0 },
+    cost: { input: 0.09, output: 0.3, cacheRead: 0.02, cacheWrite: 0 },
   },
   "tencent/Hy3": {
     input: ["text"],
