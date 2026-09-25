@@ -1,6 +1,6 @@
 {
   "name": "@kyomel/pi-omp-cc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Unofficial Command Code (commandcode.ai) provider for pi and Oh My Pi. Talks to the documented Provider API with your own API key. Not affiliated with or endorsed by Command Code.",
   "type": "module",
   "license": "MIT",
