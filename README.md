@@ -8,6 +8,10 @@
 
 Command Code provider for [pi](https://github.com/earendil-works/pi-coding-agent) and Oh My Pi, built for the GOAT subscription plan.
 
+**Requires Command Code GOAT or above.** Every Command Code plan except Go has
+Provider API access, and this extension talks to the Provider API. On the Go
+plan ($1) the API key cannot authenticate requests, so it is not supported.
+
 One TypeScript extension package works in both hosts. It uses Command Code's documented Provider API, so requests stream through the host's native OpenAI/Anthropic implementations. No custom wire protocol.
 
 - Docs: https://commandcode.ai/docs
@@ -46,9 +50,9 @@ pi remove @kyomel/pi-omp-cc        # or the installed path
 omp plugin uninstall @kyomel/pi-omp-cc
 ```
 
-## Authenticate (GOAT)
+## Authenticate (GOAT+)
 
-Every Command Code plan except Go has Provider API access. The same key authenticates the CLI subscription and the Provider API.
+A GOAT, Pro, or Max key is required; the Go plan has no Provider API access. The same key authenticates the CLI subscription and the Provider API.
 
 Three ways to provide a key:
 
@@ -66,7 +70,7 @@ The catalog comes from `GET /provider/v1/models`. When a key is configured, the 
 
 Command Code still gates individual models by plan at request time (`MODEL_NOT_IN_PLAN`). The extension marks gated models in the picker:
 
-- `Name (CC)` - available on Go/GOAT and above
+- `Name (CC)` - included with GOAT, no extra plan gate
 - `Name (CC · Pro+)` - requires Pro and above
 - `Name (CC · Max)` - requires Max
 
