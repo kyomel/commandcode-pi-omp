@@ -11,6 +11,7 @@ Command Code provider for [pi](https://github.com/earendil-works/pi-coding-agent
 One TypeScript extension package works in both hosts. It uses Command Code's documented Provider API, so requests stream through the host's native OpenAI/Anthropic implementations. No custom wire protocol.
 
 - Docs: https://commandcode.ai/docs
+- npm: https://www.npmjs.com/package/@kyomel/pi-omp-cc
 - API base: `https://api.commandcode.ai/provider/v1`
 - Chat: `POST /provider/v1/chat/completions` (OpenAI shape)
 - Claude models: `POST /provider/v1/messages` (Anthropic shape)
@@ -18,7 +19,17 @@ One TypeScript extension package works in both hosts. It uses Command Code's doc
 
 ## Install
 
-Two ways, one per host. From a local checkout:
+From npm, one command per host:
+
+```sh
+# pi
+pi install npm:@kyomel/pi-omp-cc
+
+# Oh My Pi
+omp plugin install @kyomel/pi-omp-cc
+```
+
+From a local checkout (development):
 
 ```sh
 # pi - registers the path in ~/.pi/agent/settings.json
@@ -26,13 +37,6 @@ pi install /path/to/pi-omp-cc
 
 # Oh My Pi - links the package into ~/.omp/plugins
 omp plugin install /path/to/pi-omp-cc
-```
-
-When published to npm, install by package name instead:
-
-```sh
-pi install npm:@kyomel/pi-omp-cc
-omp plugin install @kyomel/pi-omp-cc
 ```
 
 Remove:
@@ -125,9 +129,14 @@ node scripts/sync-catalog.mjs   # regenerate src/catalog-meta.ts from the comman
 ## Release
 
 ```sh
-npm login
+npm version patch
 npm publish        # prepublishOnly runs the test suite first
 ```
+
+npm requires a granular access token with "bypass 2FA" to publish from an
+account that has 2FA disabled (`npm token create --bypass-2fa ...`). A brand-new
+package can sit in npm's review queue after the publish returns 200; the
+packument on `registry.npmjs.org` appears once the hold clears.
 
 Then point both hosts at the published package instead of the checkout:
 
