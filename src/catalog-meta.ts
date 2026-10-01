@@ -1,8 +1,8 @@
 // GENERATED FILE - do not edit by hand.
 // Regenerate with: npm run sync:catalog
-// Source: npm package command-code@1.65.2 (dist/cli.mjs model registry
+// Source: npm package command-code@1.73.4 (dist/cli.mjs model registry
 // + dist/bundled/command-code-knowledge/reference/models.md).
-// Generated: 2026-09-25T09:32:41.671Z
+// Generated: 2026-10-01T18:09:04.566Z
 
 export interface CatalogMeta {
   input: readonly ("text" | "image")[]
@@ -20,6 +20,15 @@ export interface CatalogMeta {
 }
 
 export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
+  "claude-sonnet-5-5": {
+    input: ["text","image"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high","xhigh","max"],
+    contextWindow: 1000000,
+    minPlan: "GOAT and above",
+    cost: { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },
+  },
   "claude-sonnet-5": {
     input: ["text","image"],
     reasoning: true,
@@ -110,6 +119,15 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     minPlan: "Max",
     cost: { input: 10, output: 50, cacheRead: 1, cacheWrite: 12.5 },
   },
+  "gpt-6.1-sol": {
+    input: ["text","image"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high","xhigh","max"],
+    contextWindow: 1050000,
+    minPlan: "Max",
+    cost: { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
+  },
   "gpt-6-sol": {
     input: ["text","image"],
     reasoning: true,
@@ -191,11 +209,18 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     minPlan: "Pro and above",
     cost: { input: 0.75, output: 4.5, cacheRead: 0.075, cacheWrite: 0 },
   },
+  "MiniMaxAI/MiniMax-M3-Free": {
+    input: ["text","image"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high"],
+    contextWindow: 1000000,
+  },
   "deepseek/deepseek-v4-pro": {
     input: ["text"],
     reasoning: true,
     adaptive: false,
-    efforts: ["high","max"],
+    efforts: ["off","high","max"],
     contextWindow: 1000000,
     minPlan: "Go and above",
     cost: { input: 0.66, output: 1.98, cacheRead: 0.022, cacheWrite: 0 },
@@ -204,7 +229,7 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     input: ["text"],
     reasoning: true,
     adaptive: false,
-    efforts: ["high","max"],
+    efforts: ["off","high","max"],
     contextWindow: 1000000,
     minPlan: "Go and above",
     cost: { input: 0.15, output: 0.6, cacheRead: 0.003, cacheWrite: 0 },
@@ -213,7 +238,7 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     input: ["text","image"],
     reasoning: true,
     adaptive: false,
-    efforts: ["high","max"],
+    efforts: ["off","high","max"],
     contextWindow: 1000000,
     minPlan: "Go and above",
     cost: { input: 0.15, output: 0.6, cacheRead: 0.003, cacheWrite: 0 },
@@ -231,10 +256,19 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     input: ["text","image"],
     reasoning: true,
     adaptive: false,
-    efforts: ["low","high","max"],
+    efforts: ["off","low","high","max"],
     contextWindow: 1000000,
     minPlan: "Go and above",
     cost: { input: 0.15, output: 0.6, cacheRead: 0.003, cacheWrite: 0 },
+  },
+  "deepseek/deepseek-v4.1-flash-fast": {
+    input: ["text","image"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["off","low","high","max"],
+    contextWindow: 1000000,
+    minPlan: "Go and above",
+    cost: { input: 0.16, output: 0.58, cacheRead: 0.016, cacheWrite: 0 },
   },
   "moonshotai/Kimi-K3": {
     input: ["text","image"],
@@ -730,7 +764,7 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     efforts: ["low","medium","high","xhigh"],
     contextWindow: 500000,
     minPlan: "GOAT and above",
-    cost: { input: 1.2, output: 3.6, cacheRead: 0.3, cacheWrite: 0 },
+    cost: { input: 2, output: 6, cacheRead: 0.5, cacheWrite: 0 },
   },
   "poolside/laguna-s-2.1-free": {
     input: ["text"],
@@ -748,11 +782,19 @@ export const CATALOG_META: Readonly<Record<string, CatalogMeta>> = {
     minPlan: "Go and above",
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
   },
-  "stealth/space-bunny-alpha": {
+  "inclusionai/ling-3.1-flash:free": {
     input: ["text"],
     reasoning: true,
     adaptive: false,
     efforts: ["low","medium","high"],
+    minPlan: "Go and above",
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  },
+  "stealth/space-bunny-alpha": {
+    input: ["text"],
+    reasoning: true,
+    adaptive: false,
+    efforts: ["low","medium","high","max"],
     minPlan: "Go and above",
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
   },
